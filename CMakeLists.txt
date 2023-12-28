@@ -7,4 +7,6 @@ add_executable(PEA_Projekt_3 main.cpp
         data/DataReader.cpp
         graph/TSPGraph.cpp
         representations/GraphRep.cpp
-        xmlParser/tinyxml2.cpp)
+        xmlParser/tinyxml2.cpp
+        algorithms/GeneticAlgorithm.cpp
+        algorithms/GeneticAlgorithm.h)

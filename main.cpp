@@ -3,23 +3,32 @@
 #include "data/DataReader.h"
 #include "representations/GraphRep.h"
 #include "graph/TSPGraph.h"
+#include "algorithms/GeneticAlgorithm.h"
+
 using namespace std;
 
 void menu();
 void testsDialog();
 void test();
+void temp();
 
 int main() {
     cout << "Autorka: Maria Kranz, nr indeksu: 263985" << endl;
-    menu();
+    //menu();
+    temp();
     return 0;
+}
+
+void temp(){
+    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv47.xml");
+    GraphRep::printAdjacencyMatrix(graph->getAdjMatrix(), graph->getVerticesNumber());
+    GeneticAlgorithm::run(30, 10, 0.8, 0.1, graph);
 }
 
 void menu(){
     string filePath;
     TSPGraph *graph = nullptr;
-    int time;
-    int neighborhood;
+    int time, populationSize, mutationRate, crossoverRate = 0;
     char choice;
     std::vector<int> solution;
 
@@ -60,21 +69,45 @@ void menu(){
                 //ts->setStopTime(time);
                 break;
             case '3':
+                cout << "Podaj wielkosc populacji: ";
+                cin >> populationSize;
                 break;
             case '4':
-                if(graph){
-
-                }else{
-                    cout << "Nie zaladowano grafu." << endl;
-                }
+                cout << "Podaj wspolczynnik mutacji: ";
+                cin >> mutationRate;
                 break;
             case '5':
+                cout << "Podaj wspolczynnik krzyzowania: ";
+                cin >> crossoverRate;
                 break;
             case '6':
                 break;
             case '7':
                 break;
             case '8':
+                if(graph == nullptr) {
+                    cout << "Nie zaladowano grafu." << endl;
+                    break;
+                }
+                if(time == 0){
+                    cout << "Nie ustawiono warunku stopu." << endl;
+                    break;
+                }
+                if(populationSize == 0){
+                    cout << "Nie ustawiono wielkosci populacji." << endl;
+                    break;
+                }
+                if(mutationRate == 0){
+                    cout << "Nie ustawiono wspolczynnika mutacji." << endl;
+                    break;
+                }
+                if(crossoverRate == 0){
+                    cout << "NIe ustawiono wspolczynnika krzyzowania" << endl;
+                    break;
+                }
+
+                GeneticAlgorithm::run(time, populationSize, mutationRate, crossoverRate, graph);
+
                 break;
             case '9':
                 testsDialog();
