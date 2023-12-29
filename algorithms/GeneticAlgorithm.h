@@ -13,30 +13,32 @@ struct Individual {
     std::vector<int> path;
     int cost;
     //int cost = INT_MAX;
-
-    //Individual(std::vector<int>& p, int& c) : path(p), cost(c) {}
 };
 
-struct compare{
-    inline bool operator() (const Individual& a, const Individual& b)
-    {
-        return (a.cost < b.cost);
-    }
-};
 
 
 class GeneticAlgorithm {
+//    int stopTime;
+//    int populationSize;
+//    double mutationRate;
+//    double crossoverRate;
 
     std::vector<Individual> generateRandomPopulation(int populationSize, TSPGraph *&graph);
     // Funkcja selekcji turniejowej
     Individual tournamentSelection(std::vector<Individual> population);
     static bool compareIndividuals(const Individual& a, const Individual& b);
     std::vector<double> probabilityOfSelection(const std::vector<Individual>& population, const double& bestCandidateSelectionProbabilty);
+    void PMXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2);
+    void OXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2, int startPos, int endPos);
+    bool valueInbetweenRange(const std::vector<int> tab, int startPos, int endPos, int valueToFind);
 
 public:
+    //GeneticAlgorithm(int stopTime, int populationSize, double mutationRate, double crossoverRate,);
     GeneticAlgorithm();
 
     Individual run(int stopTime, int populationSize, double mutationRate, double crossoverRate, TSPGraph *&graph);
+    //Individual run(TSPGraph *&graph);
+
 };
 
 
