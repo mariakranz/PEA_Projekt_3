@@ -16,13 +16,18 @@ int main() {
     cout << "Autorka: Maria Kranz, nr indeksu: 263985" << endl;
     //menu();
     temp();
+//    for(int i = 0; i < 10; i++){
+//        cout << ((float) (rand()%10)) /10<< endl;
+//    }
     return 0;
 }
 
 void temp(){
     TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv47.xml");
     GraphRep::printAdjacencyMatrix(graph->getAdjMatrix(), graph->getVerticesNumber());
-    GeneticAlgorithm::run(30, 10, 0.8, 0.1, graph);
+    auto ga = new GeneticAlgorithm();
+    ga->run(30, 10, 0.8, 0.1, graph);
+    //GeneticAlgorithm::run(30, 10, 0.8, 0.1, graph);
 }
 
 void menu(){
@@ -106,7 +111,7 @@ void menu(){
                     break;
                 }
 
-                GeneticAlgorithm::run(time, populationSize, mutationRate, crossoverRate, graph);
+                //GeneticAlgorithm::run(time, populationSize, mutationRate, crossoverRate, graph);
 
                 break;
             case '9':
