@@ -31,6 +31,7 @@ class GeneticAlgorithm {
     void PMXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2);
     void OXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2, int startPos, int endPos);
     bool valueInbetweenRange(const std::vector<int> tab, int startPos, int endPos, int valueToFind);
+    void inversionMutation(Individual& individual);
 
 public:
     //GeneticAlgorithm(int stopTime, int populationSize, double mutationRate, double crossoverRate,);

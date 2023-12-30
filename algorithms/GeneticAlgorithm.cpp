@@ -35,7 +35,8 @@ Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutati
     parent2.path = std::vector<int> {9, 3, 7, 8, 2, 6, 5, 1, 4};
     OXCrossover(parent1, parent2, child1, child2, 3, 7);
 
-
+    //mutacja
+    inversionMutation(child1);
 
 
     //while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {}
@@ -157,7 +158,7 @@ void GeneticAlgorithm::PMXCrossover(const Individual &parent1, const Individual 
 
 void GeneticAlgorithm::OXCrossover(const Individual &parent1, const Individual &parent2, Individual &child1,
                                    Individual &child2, int startPos, int endPos) {
-    child1.path.resize(parent1.path.size());
+    child1.path.resize(parent1.path.size());    // fixme: zmienic zeby wypelnial puste miejsca '-1' a nie '0'
     child2.path.resize(parent2.path.size());
 
     // kopiowanie fragmentow rodzicow do potomkow
@@ -199,6 +200,23 @@ bool GeneticAlgorithm::valueInbetweenRange(const std::vector<int> tab, int start
         if (tab[i] == valueToFind) return true;
     }
     return false;
+}
+
+void GeneticAlgorithm::inversionMutation(Individual &individual) {
+    // generowanie dwoch losowych punktow
+    int iD1 = rand() % individual.path.size();
+    int iD2 = rand() % individual.path.size();
+
+    while(iD1 == iD2){
+        iD2 = rand() % individual.path.size();
+    }
+
+    if(iD1 < iD2){
+        reverse(individual.path.begin() + iD1, individual.path.begin() + iD2 + 1);
+        return;
+    }
+
+    reverse(individual.path.begin() + iD2, individual.path.begin() + iD1 + 1);
 }
 
 //GeneticAlgorithm::GeneticAlgorithm(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
