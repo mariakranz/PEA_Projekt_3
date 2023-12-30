@@ -31,9 +31,9 @@ Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutati
     //krzyzowanie
     Individual child1;
     Individual child2;
-    parent1.path = std::vector<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
-    parent2.path = std::vector<int> {9, 3, 7, 8, 2, 6, 5, 1, 4};
-    OXCrossover(parent1, parent2, child1, child2, 3, 7);
+    parent1.path = std::vector<int> {0, 1, 2, 3, 4, 5, 6, 7, 8};
+    parent2.path = std::vector<int> {0, 3, 7, 8, 2, 6, 5, 1, 4};
+    OXCrossover(parent1, parent2, child1, child2, 3, 6);
 
     //mutacja
     inversionMutation(child1);
@@ -55,7 +55,7 @@ std::vector<Individual> GeneticAlgorithm::generateRandomPopulation(int populatio
         std::shuffle(population[i].path.begin() + 1, population[i].path.end(), std::mt19937(std::random_device()()));
 
 
-        population[i].cost = graph->calculateTour(population[i].path);
+        population[i].cost = graph->calculateTour(population[i].path);      //fixme: wyniesc graph do konstruktora
     }
     return population;
 }
@@ -73,8 +73,8 @@ Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual> populat
     // Sortowanie nowego wektora
     //std::sort(sortedPopulation.begin(), sortedPopulation.end(), compareIndividuals);
 
-    std::sort(population.begin(), population.end(), compareIndividuals);
-    probabilityForEveryIndividual = probabilityOfSelection(population, selectionProbability);
+    std::sort(population.begin(), population.end(), compareIndividuals);    //fixme: sortowanie wyniesc spoza funkcji (nad nia w metodzie run)
+    probabilityForEveryIndividual = probabilityOfSelection(population, selectionProbability);   //fixme: to tez wyniesc poza funkcje i dodac jako parametr
 
 
 
@@ -156,22 +156,30 @@ void GeneticAlgorithm::PMXCrossover(const Individual &parent1, const Individual 
 
 }
 
+// krzyzowanie OX, wybiera geny na przedziale [startPos, endPos] i modyfikuje dzieci zmodyfikowanymi genomami
+
 void GeneticAlgorithm::OXCrossover(const Individual &parent1, const Individual &parent2, Individual &child1,
                                    Individual &child2, int startPos, int endPos) {
-    child1.path.resize(parent1.path.size());    // fixme: zmienic zeby wypelnial puste miejsca '-1' a nie '0'
+    child1.path.resize(parent1.path.size());
     child2.path.resize(parent2.path.size());
 
+    //ustawianie wszystkich elementow na '-1', poniewaz w vectorze bedzie znajdowalo sie 0 (wierzcholki sa numerowane od 0)
+    for(int i = 0; i < child1.path.size(); i++){
+        child1.path[i] = -1;
+        child2.path[i] = -1;
+    }
+
     // kopiowanie fragmentow rodzicow do potomkow
-    for(int i = startPos; i < endPos; i++){
+    for(int i = startPos; i <= endPos; i++){
         child1.path[i] = parent1.path[i];
         child2.path[i] = parent2.path[i];
     }
 
     // kopiowanie reszty genow do potomkow
 
-    int iDP1 = endPos;
-    int iDP2 = endPos;
-    for(int i = endPos ; i != startPos; ){
+    int iDP1 = endPos + 1;
+    int iDP2 = endPos + 1;
+    for(int i = endPos + 1 ; i != startPos; ){
         //znajdz nastepny element do skopiowania z drugiego rodzica
         while(std::find(child1.path.begin(), child1.path.end(), parent2.path[iDP2]) != child1.path.end()){
             iDP2++;
