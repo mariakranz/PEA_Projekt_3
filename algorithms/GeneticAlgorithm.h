@@ -22,10 +22,11 @@ class GeneticAlgorithm {
 //    int populationSize;
 //    double mutationRate;
 //    double crossoverRate;
+    TSPGraph* graph;
 
-    std::vector<Individual> generateRandomPopulation(int populationSize, TSPGraph *&graph);
+    std::vector<Individual> generateRandomPopulation(int populationSize);
     // Funkcja selekcji turniejowej
-    Individual tournamentSelection(std::vector<Individual> population);
+    Individual tournamentSelection(std::vector<Individual>& population, const std::vector<double>& probabilityOfSelection);
     static bool compareIndividuals(const Individual& a, const Individual& b);
     std::vector<double> probabilityOfSelection(const std::vector<Individual>& population, const double& bestCandidateSelectionProbabilty);
     void PMXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2);
@@ -34,10 +35,10 @@ class GeneticAlgorithm {
     void inversionMutation(Individual& individual);
 
 public:
-    //GeneticAlgorithm(int stopTime, int populationSize, double mutationRate, double crossoverRate,);
-    GeneticAlgorithm();
 
-    Individual run(int stopTime, int populationSize, double mutationRate, double crossoverRate, TSPGraph *&graph);
+    explicit GeneticAlgorithm(TSPGraph*& graph);
+
+    Individual run(int stopTime, int populationSize, double mutationRate, double crossoverRate);
     //Individual run(TSPGraph *&graph);
 
 };

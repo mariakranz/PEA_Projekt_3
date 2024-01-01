@@ -8,43 +8,67 @@
 #include <iostream>
 #include "GeneticAlgorithm.h"
 
-Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutationRate, double crossoverRate, TSPGraph *&graph) {
+Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
     srand ( time(NULL) );
+    std::vector<double> probabilityForEveryIndividual(populationSize);
+    const double selectionProbability = 0.7; // Prawdopodobieństwo wyboru najlepszego osobnika
+
 
     //czas start
     const std::clock_t start_time = std::clock();                                                                //rozpocznij odliczanie zegara
 
     //wygeneruj losowa populacje
     std::vector<Individual> population (populationSize);
-    population = generateRandomPopulation(populationSize, graph);
+    population = generateRandomPopulation(populationSize);
+
+    while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {
+        std::vector<Individual> newPopulation;
+
+        // sortowanie wedlug przystosowania (rosnaco)
+        std::sort(population.begin(), population.end(), compareIndividuals);
+
+        //selekcja
+        probabilityForEveryIndividual = probabilityOfSelection(population, selectionProbability);
+
+        for (int i = 0; i < populationSize; i += 2) {
+            if (rand() < crossoverRate * RAND_MAX) {
+                Individual parent1 = tournamentSelection(population, probabilityForEveryIndividual);
+                Individual parent2 = tournamentSelection(population, probabilityForEveryIndividual);
+
+                //krzyzowanie
+                Individual child1;
+                Individual child2;
+                //parent1.path = std::vector<int> {0, 1, 2, 3, 4, 5, 6, 7, 8};
+                //parent2.path = std::vector<int> {0, 3, 7, 8, 2, 6, 5, 1, 4};
+                OXCrossover(parent1, parent2, child1, child2, 3, 6);
+
+                newPopulation.push_back(child1);
+                newPopulation.push_back(child2);
+
+            }else{
+                newPopulation.push_back(population[i]);
+                newPopulation.push_back(population[i+1]);
+            }
+
+        }
+
+        for(Individual individual: newPopulation){
+            if (rand() < mutationRate * RAND_MAX){
+                //mutacja
+                inversionMutation(individual);
+            }
+        }
+
+        population = newPopulation;
+    }
 
 
-    //selekcja
-    std::vector<Individual> newPopulation;
+    std::sort(population.begin(), population.end(), compareIndividuals);
 
-
-    Individual parent1 = tournamentSelection(population);
-    Individual parent2 = tournamentSelection(population);
-    double time = (std::clock() - (double)start_time) / CLOCKS_PER_SEC;
-    std::cout << "Czas:" << time << std::endl;
-
-    //krzyzowanie
-    Individual child1;
-    Individual child2;
-    parent1.path = std::vector<int> {0, 1, 2, 3, 4, 5, 6, 7, 8};
-    parent2.path = std::vector<int> {0, 3, 7, 8, 2, 6, 5, 1, 4};
-    OXCrossover(parent1, parent2, child1, child2, 3, 6);
-
-    //mutacja
-    inversionMutation(child1);
-
-
-    //while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {}
-
-    return Individual();
+    return population[0];
 }
 
-std::vector<Individual> GeneticAlgorithm::generateRandomPopulation(int populationSize, TSPGraph *&graph) {
+std::vector<Individual> GeneticAlgorithm::generateRandomPopulation(int populationSize) {
     int numberOfCities = graph->getVerticesNumber();
     std::vector<Individual> population(populationSize);
     for (int i = 0; i < populationSize; ++i) {
@@ -55,26 +79,21 @@ std::vector<Individual> GeneticAlgorithm::generateRandomPopulation(int populatio
         std::shuffle(population[i].path.begin() + 1, population[i].path.end(), std::mt19937(std::random_device()()));
 
 
-        population[i].cost = graph->calculateTour(population[i].path);      //fixme: wyniesc graph do konstruktora
+        population[i].cost = graph->calculateTour(population[i].path);
     }
     return population;
 }
 
-Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual> population) {
+Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual>& population, const std::vector<double>& probabilityOfSelection ) {
 //    srand ( time(NULL) );
     const int tournamentSize = 3; // Rozmiar turnieju
-    const double selectionProbability = 0.7; // Prawdopodobieństwo wyboru najlepszego osobnika
 
     std::vector<int> tournamentParticipants(tournamentSize);
-    std::vector<double> probabilityForEveryIndividual(population.size());
-
     // Kopiowanie wektora do innego wektora, ponieważ sortowanie zmodyfikuje jego kolejność
     //std::vector<Individual> sortedPopulation = population;
     // Sortowanie nowego wektora
     //std::sort(sortedPopulation.begin(), sortedPopulation.end(), compareIndividuals);
 
-    std::sort(population.begin(), population.end(), compareIndividuals);    //fixme: sortowanie wyniesc spoza funkcji (nad nia w metodzie run)
-    probabilityForEveryIndividual = probabilityOfSelection(population, selectionProbability);   //fixme: to tez wyniesc poza funkcje i dodac jako parametr
 
 
 
@@ -84,13 +103,13 @@ Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual> populat
 
         while(selectedIdx == -1){
             //srand ( time(NULL) );
-            int randomIdx = rand()%population.size();
+            int randomIdx = rand()% population.size();
 
             //srand ( time(NULL) );
             //float randValue = ((float) (rand()%10)) /10;
             double randValue = (double)rand() / RAND_MAX;
 
-            if (randValue < probabilityForEveryIndividual[randomIdx]) selectedIdx = randomIdx;
+            if (randValue < probabilityOfSelection[randomIdx]) selectedIdx = randomIdx;
 
         }
         tournamentParticipants[i] = selectedIdx;
@@ -201,6 +220,10 @@ void GeneticAlgorithm::OXCrossover(const Individual &parent1, const Individual &
             i++;
         }
     }
+
+    // obicz koszt sciezek
+    child1.cost = graph->calculateTour(child1.path);
+    child2.cost = graph->calculateTour(child2.path);
 }
 
 bool GeneticAlgorithm::valueInbetweenRange(const std::vector<int> tab, int startPos, int endPos, int valueToFind) {
@@ -225,12 +248,12 @@ void GeneticAlgorithm::inversionMutation(Individual &individual) {
     }
 
     reverse(individual.path.begin() + iD2, individual.path.begin() + iD1 + 1);
+
+    //oblicz koszt sciezki
+    individual.cost = graph->calculateTour(individual.path);
 }
 
-//GeneticAlgorithm::GeneticAlgorithm(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
-//    this->stopTime = stopTime;
-//    this->populationSize = populationSize;
-//    mutationRate, double crossoverRate
-//}
+GeneticAlgorithm::GeneticAlgorithm(TSPGraph *&graph) {
+    this->graph = graph;
 
-GeneticAlgorithm::GeneticAlgorithm() = default;
+}

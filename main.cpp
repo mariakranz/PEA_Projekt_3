@@ -16,26 +16,39 @@ int main() {
     cout << "Autorka: Maria Kranz, nr indeksu: 263985" << endl;
     //menu();
     temp();
-//    for(int i = 0; i < 10; i++){
-//        cout << ((float) (rand()%10)) /10<< endl;
-//    }
     return 0;
 }
 
 void temp(){
-    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv47.xml");
+    //TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv47.xml");
+
+    //TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv170.xml");
+
+    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\rbg403.xml");
+
     GraphRep::printAdjacencyMatrix(graph->getAdjMatrix(), graph->getVerticesNumber());
-    auto ga = new GeneticAlgorithm();
-    ga->run(30, 10, 0.8, 0.1, graph);
+    auto ga = new GeneticAlgorithm(graph);
+    auto result = ga->run(30, 10, 0.01, 0.8);
+
+    cout << "Koszt: " << result.cost << endl;
+    cout << "Sciezka: ";
+
+    for (int i  = 0; i < result.path.size(); i++){
+        cout << result.path[i] << " ";
+    }
+
+    cout << endl;
     //GeneticAlgorithm::run(30, 10, 0.8, 0.1, graph);
 }
 
 void menu(){
     string filePath;
-    TSPGraph *graph = nullptr;
-    int time, populationSize, mutationRate, crossoverRate = 0;
+    GeneticAlgorithm* ga = nullptr;
+    TSPGraph* graph = nullptr;
+    int time, populationSize = 0;
+    double mutationRate, crossoverRate = 0.0;
     char choice;
-    std::vector<int> solution;
+    Individual result;
 
     do{
         cout << "\n----MENU----\n"
@@ -62,7 +75,6 @@ void menu(){
                 delete graph;                       //usun stary graf (jesli byl)
                 graph = DataReader::createGraphFromFile(filePath.c_str());
                 if (graph != nullptr){
-                    //ts->setGraph(graph);
                     GraphRep::printAdjacencyMatrix(graph->getAdjMatrix(), graph->getVerticesNumber());
                 }else{
                     cerr << "Bledy przy odczytywaniu danych." << endl;
@@ -71,7 +83,6 @@ void menu(){
             case '2':
                 cout << "Podaj czas [s]: ";
                 cin >> time;
-                //ts->setStopTime(time);
                 break;
             case '3':
                 cout << "Podaj wielkosc populacji: ";
@@ -111,9 +122,20 @@ void menu(){
                     break;
                 }
 
-                //GeneticAlgorithm::run(time, populationSize, mutationRate, crossoverRate, graph);
+                delete ga;
+                ga = new GeneticAlgorithm(graph);
+                result = ga->run(time, populationSize, mutationRate, crossoverRate);
 
+                cout << "Koszt: " << result.cost << endl;
+                cout << "Sciezka: ";
+
+                for (int i : result.path){
+                    cout << i << " ";
+                }
+
+                cout << endl;
                 break;
+
             case '9':
                 testsDialog();
                 break;
