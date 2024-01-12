@@ -6,12 +6,15 @@
 #include <algorithm>
 #include <random>
 #include <iostream>
+#include <fstream>
 #include "GeneticAlgorithm.h"
 
-Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
+Individual GeneticAlgorithm::runOlderVersion(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
     srand ( time(NULL) );
-    std::vector<double> probabilityForEveryIndividual(populationSize);
+//    std::vector<double> probabilityForEveryIndividual(populationSize);
     const double selectionProbability = 0.7; // Prawdopodobieństwo wyboru najlepszego osobnika
+    Individual bestFound;
+    bestFound.cost = INT_MAX;
 
 
     //czas start
@@ -21,26 +24,45 @@ Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutati
     std::vector<Individual> population (populationSize);
     population = generateRandomPopulation(populationSize);
 
+    int c = 0;
+    //while( c < 100000){
     while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {
         std::vector<Individual> newPopulation;
 
+        std::vector<Individual> populationCopy;
+        std::vector<double> probabilityForEveryIndividual(populationSize);
+
         // sortowanie wedlug przystosowania (rosnaco)
         std::sort(population.begin(), population.end(), compareIndividuals);
+        std::cout << population[0].cost << std::endl;
 
         //selekcja
         probabilityForEveryIndividual = probabilityOfSelection(population, selectionProbability);
 
         for (int i = 0; i < populationSize; i += 2) {
             if (rand() < crossoverRate * RAND_MAX) {
-                Individual parent1 = tournamentSelection(population, probabilityForEveryIndividual);
-                Individual parent2 = tournamentSelection(population, probabilityForEveryIndividual);
+                populationCopy = population;
+                Individual parent1 = tournamentSelection(populationCopy, probabilityForEveryIndividual);
+                Individual parent2 = tournamentSelection(populationCopy, probabilityForEveryIndividual);
+                //Individual parent1 = tournamentSelectionV2(population);
+                //Individual parent2 = tournamentSelectionV2(population);
 
                 //krzyzowanie
                 Individual child1;
                 Individual child2;
                 //parent1.path = std::vector<int> {0, 1, 2, 3, 4, 5, 6, 7, 8};
                 //parent2.path = std::vector<int> {0, 3, 7, 8, 2, 6, 5, 1, 4};
-                OXCrossover(parent1, parent2, child1, child2, 3, 6);
+
+                int iD1 = rand() % parent1.path.size();
+                int iD2;
+                do{
+                    iD2= rand() % parent1.path.size();
+                }while (iD2 == iD1);
+
+                if(iD1 < iD2) OXCrossover(parent1, parent2, child1, child2, iD1, iD2);
+                else OXCrossover(parent1, parent2, child1, child2, iD2, iD1);
+
+                //OXCrossover(parent1, parent2, child1, child2, 3, 6);
 
                 newPopulation.push_back(child1);
                 newPopulation.push_back(child2);
@@ -60,11 +82,13 @@ Individual GeneticAlgorithm::run(int stopTime, int populationSize, double mutati
         }
 
         population = newPopulation;
+        c++;
     }
 
 
     std::sort(population.begin(), population.end(), compareIndividuals);
 
+    std::cout << "c: " << c << std::endl;
     return population[0];
 }
 
@@ -84,11 +108,11 @@ std::vector<Individual> GeneticAlgorithm::generateRandomPopulation(int populatio
     return population;
 }
 
-Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual>& population, const std::vector<double>& probabilityOfSelection ) {
+Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual>& population, std::vector<double>& probabilityOfSelection ) {
 //    srand ( time(NULL) );
     const int tournamentSize = 3; // Rozmiar turnieju
 
-    std::vector<int> tournamentParticipants(tournamentSize);
+    std::vector<int> tournamentParticipants(tournamentSize, -1);
     // Kopiowanie wektora do innego wektora, ponieważ sortowanie zmodyfikuje jego kolejność
     //std::vector<Individual> sortedPopulation = population;
     // Sortowanie nowego wektora
@@ -101,7 +125,7 @@ Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual>& popula
     for (int i = 0; i < tournamentSize; ++i) {
         int selectedIdx = -1;
 
-        while(selectedIdx == -1){
+        while(selectedIdx == -1 || std::find(tournamentParticipants.begin(), tournamentParticipants.end(), selectedIdx) != tournamentParticipants.end()){
             //srand ( time(NULL) );
             int randomIdx = rand()% population.size();
 
@@ -136,7 +160,12 @@ Individual GeneticAlgorithm::tournamentSelection(std::vector<Individual>& popula
         return population[a].cost < population[b].cost;
     });
 
-    return population[tournamentParticipants[0]];
+    // Usun z populacji zwycięzce (żeby nie byl wybrany ponownie w drugiej selekcji turniejowej)
+    probabilityOfSelection.erase(probabilityOfSelection.begin() + tournamentParticipants[0]);
+    Individual winner = population[tournamentParticipants[0]];
+    population.erase(population.begin() + tournamentParticipants[0]);
+
+    return winner;
 }
 
 
@@ -198,7 +227,12 @@ void GeneticAlgorithm::OXCrossover(const Individual &parent1, const Individual &
 
     int iDP1 = endPos + 1;
     int iDP2 = endPos + 1;
-    for(int i = endPos + 1 ; i != startPos; ){
+    if(endPos+1 > child1.path.size() - 1){
+        iDP1 = 0;
+        iDP2 = 0;
+    }
+    int newPos = iDP1;
+    for(int i = newPos ; i != startPos; ){
         //znajdz nastepny element do skopiowania z drugiego rodzica
         while(std::find(child1.path.begin(), child1.path.end(), parent2.path[iDP2]) != child1.path.end()){
             iDP2++;
@@ -244,6 +278,7 @@ void GeneticAlgorithm::inversionMutation(Individual &individual) {
 
     if(iD1 < iD2){
         reverse(individual.path.begin() + iD1, individual.path.begin() + iD2 + 1);
+        individual.cost = graph->calculateTour(individual.path);
         return;
     }
 
@@ -256,4 +291,179 @@ void GeneticAlgorithm::inversionMutation(Individual &individual) {
 GeneticAlgorithm::GeneticAlgorithm(TSPGraph *&graph) {
     this->graph = graph;
 
+}
+
+// ------------------------------------------gotowiec
+Individual GeneticAlgorithm::tournamentSelectionV2(std::vector<Individual> &population) {
+
+    Individual individual1 = population[std::rand() % population.size()]; // losuje pierwszego osobnika
+    Individual individual2 = population[std::rand() % population.size()]; // losuje drugiego osobnika
+
+    return compareIndividuals(individual1, individual2) ? individual1 : individual2; // zwracam tego osobnika, ktory jest lepszy
+}
+
+void GeneticAlgorithm::testOX() {
+    Individual parent1, parent2, child1, child2;
+//    parent1.path = std::vector<int> {0, 1, 2, 3, 4, 5, 6, 7, 8};
+//    parent2.path = std::vector<int> {0, 3, 7, 8, 2, 6, 5, 1, 4};
+    parent1.path = std::vector<int> {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    parent2.path = std::vector<int> {9, 3, 7, 8, 2, 6, 5, 1, 4};
+
+
+    OXCrossover(parent1, parent2, child1, child2, 3, 6);
+
+    std::cout << "Sciezka: ";
+    for (int i  = 0; i < child1.path.size(); i++){
+        std::cout << child1.path[i] << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Sciezka: ";
+    for (int i  = 0; i < child2.path.size(); i++){
+        std::cout << child2.path[i] << " ";
+    }
+    std::cout << std::endl;
+}
+
+Individual GeneticAlgorithm::runV2(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
+    srand ( time(NULL) );
+
+    //czas start
+    const std::clock_t start_time = std::clock();                                                                //rozpocznij odliczanie zegara
+
+    //wygeneruj losowa populacje
+    std::vector<Individual> population (populationSize);
+    population = generateRandomPopulation(populationSize);
+
+    while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {
+        std::vector<Individual> newPopulation(populationSize);
+        int iteratorInPopulation = 0;
+
+        // sortowanie wedlug przystosowania (rosnaco)
+        std::sort(population.begin(), population.end(), compareIndividuals);
+        std::cout << population[0].cost << std::endl;
+        for(; iteratorInPopulation < 10; iteratorInPopulation++){                    //elitaryzm - zachowujemy 10 najlepszych wynikow z poprzedniej populacji
+            newPopulation[iteratorInPopulation] = population[iteratorInPopulation];
+        }
+        iteratorInPopulation--;
+
+        while ( iteratorInPopulation != populationSize - 1) {
+
+            //selekcja
+            Individual parent1 = tournamentSelectionV2(population);
+            Individual parent2 = tournamentSelectionV2(population);
+
+            Individual child1 = parent1;
+            Individual child2 = parent2;
+
+            // krzyżowanie
+            if (rand() < crossoverRate * RAND_MAX) {
+                //krzyzowanie
+                int iD1 = rand() % parent1.path.size();
+                int iD2;
+                do{
+                    iD2= rand() % parent1.path.size();
+                }while (iD2 == iD1);
+
+                if(iD1 < iD2) OXCrossover(parent1, parent2, child1, child2, iD1, iD2);
+                else OXCrossover(parent1, parent2, child1, child2, iD2, iD1);
+            }
+
+            //mutacja
+            if (rand() < mutationRate * RAND_MAX){
+                //mutacja
+                inversionMutation(child1);
+            }
+
+            if (rand() < mutationRate * RAND_MAX){
+                //mutacja
+                inversionMutation(child2);
+            }
+
+            newPopulation[++iteratorInPopulation] = child1;
+            newPopulation[++iteratorInPopulation] = child2;
+        }
+
+        population = newPopulation;
+    }
+
+    std::sort(population.begin(), population.end(), compareIndividuals);
+    return population[0];
+}
+
+Individual GeneticAlgorithm::runTest(int stopTime, int populationSize, double mutationRate, double crossoverRate,
+                                     const char *filePath) {
+
+    std::ofstream file(filePath);
+    if (!file.is_open()) return {};
+    file << "time[s];value" << std::endl;
+
+    double bestSolutionFoundTime;
+    srand ( time(NULL) );
+
+    //czas start
+    const std::clock_t start_time = std::clock();                                                                //rozpocznij odliczanie zegara
+
+    //wygeneruj losowa populacje
+    std::vector<Individual> population (populationSize);
+    population = generateRandomPopulation(populationSize);
+
+    while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {
+        std::vector<Individual> newPopulation(populationSize);
+        int iteratorInPopulation = 0;
+
+        // sortowanie wedlug przystosowania (rosnaco)
+        std::sort(population.begin(), population.end(), compareIndividuals);
+        bestSolutionFoundTime = (std::clock() - (double)start_time) / CLOCKS_PER_SEC;
+        file << bestSolutionFoundTime << ";" << population[0].cost  << std::endl;
+        //std::cout << "Rozw: " << bestCandidateCost << " Czas:" << bestSolutionFoundTime << std::endl;
+
+        for(; iteratorInPopulation < 10; iteratorInPopulation++){                    //elitaryzm - zachowujemy 10 najlepszych wynikow z poprzedniej populacji
+            newPopulation[iteratorInPopulation] = population[iteratorInPopulation];
+        }
+        iteratorInPopulation--;
+
+        while ( iteratorInPopulation != populationSize - 1) {
+
+            //selekcja
+            Individual parent1 = tournamentSelectionV2(population);
+            Individual parent2 = tournamentSelectionV2(population);
+
+            Individual child1 = parent1;
+            Individual child2 = parent2;
+
+            // krzyżowanie
+            if (rand() < crossoverRate * RAND_MAX) {
+                //krzyzowanie
+                int iD1 = rand() % parent1.path.size();
+                int iD2;
+                do{
+                    iD2= rand() % parent1.path.size();
+                }while (iD2 == iD1);
+
+                if(iD1 < iD2) OXCrossover(parent1, parent2, child1, child2, iD1, iD2);
+                else OXCrossover(parent1, parent2, child1, child2, iD2, iD1);
+            }
+
+            //mutacja
+            if (rand() < mutationRate * RAND_MAX){
+                //mutacja
+                inversionMutation(child1);
+            }
+
+            if (rand() < mutationRate * RAND_MAX){
+                //mutacja
+                inversionMutation(child2);
+            }
+
+            newPopulation[++iteratorInPopulation] = child1;
+            newPopulation[++iteratorInPopulation] = child2;
+        }
+
+        population = newPopulation;
+    }
+
+    file.close();
+    std::sort(population.begin(), population.end(), compareIndividuals);
+    return population[0];
 }

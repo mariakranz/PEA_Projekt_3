@@ -9,4 +9,6 @@ add_executable(PEA_Projekt_3 main.cpp
         representations/GraphRep.cpp
         xmlParser/tinyxml2.cpp
         algorithms/GeneticAlgorithm.cpp
-        algorithms/GeneticAlgorithm.h)
+        algorithms/GeneticAlgorithm.h
+        data/Tests.h
+        data/Tests.cpp)
