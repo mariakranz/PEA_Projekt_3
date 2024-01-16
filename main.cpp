@@ -16,13 +16,16 @@ void test170();
 void test403();
 void temp();
 void temt2();
+void test1();
 
 int main() {
     cout << "Autorka: Maria Kranz, nr indeksu: 263985" << endl;
+    //test();
+    //test1();
     menu();
     //temp();
  //   test47();
-//    test170();
+    //test170();
     //test403();
     return 0;
 }
@@ -69,7 +72,7 @@ void test47(){
 void test170(){
     TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv170.xml");
     auto ga = new GeneticAlgorithm(graph);
-    auto result = ga->runV2(240, 5000, 0.01, 0.8);
+    auto result = ga->runV2(60, 5000, 0.01, 0.8);
     cout << "Koszt: " << result.cost << endl;
     cout << "Sciezka: ";
 
@@ -247,7 +250,7 @@ void menu(){
                 testsDialog();
                 break;
         }
-    }while (choice != '0');
+    }while (choice != 0);
 
     delete graph;
 }
@@ -274,7 +277,30 @@ void testsDialog()
 
 void test()
 {
-    Tests::generateFile_BestSolutionInTime_ftv47(10, 120, 5000, 0.01, 0.8);
-//    Tests::generateFile_BestSolutionInTime_ftv170(10, 240, 5000, 0.01, 0.8);
-//    Tests::generateFile_BestSolutionInTime_rbg403(10, 360, 5000, 0.01, 0.8);
+    const int numberOfTestInstances = 10;
+    const double mutationRate = 0.01;
+    const double crossoverRate = 0.8;
+    const int populationSize[3] = {500, 2000, 5000};
+
+    string data47 = "ftv47.xml";
+    const int time47 = 120;
+    string data170 = "ftv170.xml";
+    const int time170 = 240;
+    string data403 = "rbg403.xml";
+    const int time403 = 360;
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[0], 0.01, 0.8,data47.c_str());
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[1], 0.01, 0.8, data47.c_str());
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[2], 0.01, 0.8, data47.c_str());
+
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[0], mutationRate, crossoverRate, data170.c_str());
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[1], mutationRate, crossoverRate, data170.c_str());
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[2], mutationRate, crossoverRate, data170.c_str());
+
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[0], mutationRate, crossoverRate, data403.c_str());
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[1], mutationRate, crossoverRate, data403.c_str());
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[2], mutationRate, crossoverRate, data403.c_str());
+}
+
+void test1(){
+    Tests::generateFile_BestSolutionInTime_ftv47(10, 10, 500, 0.01, 0.8,"ftv170.xml");
 }

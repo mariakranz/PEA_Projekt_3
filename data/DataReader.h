@@ -2,8 +2,8 @@
 // Created by Szef on 25.11.2023.
 //
 
-#ifndef PEA_PROJEKT2_DATAREADER_H
-#define PEA_PROJEKT2_DATAREADER_H
+#ifndef PEA_PROJEKT_3_DATAREADER_H
+#define PEA_PROJEKT_3_DATAREADER_H
 
 
 #include <string>
@@ -17,4 +17,4 @@ public:
 };
 
 
-#endif //PEA_PROJEKT2_DATAREADER_H
+#endif //PEA_PROJEKT_3_DATAREADER_H

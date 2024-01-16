@@ -2,8 +2,8 @@
 // Created by Szef on 25.11.2023.
 //
 
-#ifndef PEA_PROJEKT2_GRAPHREP_H
-#define PEA_PROJEKT2_GRAPHREP_H
+#ifndef PEA_PROJEKT_3_GRAPHREP_H
+#define PEA_PROJEKT_3_GRAPHREP_H
 
 
 class GraphRep {
@@ -12,4 +12,4 @@ public:
 };
 
 
-#endif //PEA_PROJEKT2_GRAPHREP_H
+#endif //PEA_PROJEKT_3_GRAPHREP_H

@@ -7,90 +7,8 @@
 #include <random>
 #include <iostream>
 #include <fstream>
+#include <list>
 #include "GeneticAlgorithm.h"
-
-Individual GeneticAlgorithm::runOlderVersion(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
-    srand ( time(NULL) );
-//    std::vector<double> probabilityForEveryIndividual(populationSize);
-    const double selectionProbability = 0.7; // Prawdopodobieństwo wyboru najlepszego osobnika
-    Individual bestFound;
-    bestFound.cost = INT_MAX;
-
-
-    //czas start
-    const std::clock_t start_time = std::clock();                                                                //rozpocznij odliczanie zegara
-
-    //wygeneruj losowa populacje
-    std::vector<Individual> population (populationSize);
-    population = generateRandomPopulation(populationSize);
-
-    int c = 0;
-    //while( c < 100000){
-    while ((std::clock() - start_time) / CLOCKS_PER_SEC < stopTime) {
-        std::vector<Individual> newPopulation;
-
-        std::vector<Individual> populationCopy;
-        std::vector<double> probabilityForEveryIndividual(populationSize);
-
-        // sortowanie wedlug przystosowania (rosnaco)
-        std::sort(population.begin(), population.end(), compareIndividuals);
-        std::cout << population[0].cost << std::endl;
-
-        //selekcja
-        probabilityForEveryIndividual = probabilityOfSelection(population, selectionProbability);
-
-        for (int i = 0; i < populationSize; i += 2) {
-            if (rand() < crossoverRate * RAND_MAX) {
-                populationCopy = population;
-                Individual parent1 = tournamentSelection(populationCopy, probabilityForEveryIndividual);
-                Individual parent2 = tournamentSelection(populationCopy, probabilityForEveryIndividual);
-                //Individual parent1 = tournamentSelectionV2(population);
-                //Individual parent2 = tournamentSelectionV2(population);
-
-                //krzyzowanie
-                Individual child1;
-                Individual child2;
-                //parent1.path = std::vector<int> {0, 1, 2, 3, 4, 5, 6, 7, 8};
-                //parent2.path = std::vector<int> {0, 3, 7, 8, 2, 6, 5, 1, 4};
-
-                int iD1 = rand() % parent1.path.size();
-                int iD2;
-                do{
-                    iD2= rand() % parent1.path.size();
-                }while (iD2 == iD1);
-
-                if(iD1 < iD2) OXCrossover(parent1, parent2, child1, child2, iD1, iD2);
-                else OXCrossover(parent1, parent2, child1, child2, iD2, iD1);
-
-                //OXCrossover(parent1, parent2, child1, child2, 3, 6);
-
-                newPopulation.push_back(child1);
-                newPopulation.push_back(child2);
-
-            }else{
-                newPopulation.push_back(population[i]);
-                newPopulation.push_back(population[i+1]);
-            }
-
-        }
-
-        for(Individual individual: newPopulation){
-            if (rand() < mutationRate * RAND_MAX){
-                //mutacja
-                inversionMutation(individual);
-            }
-        }
-
-        population = newPopulation;
-        c++;
-    }
-
-
-    std::sort(population.begin(), population.end(), compareIndividuals);
-
-    std::cout << "c: " << c << std::endl;
-    return population[0];
-}
 
 std::vector<Individual> GeneticAlgorithm::generateRandomPopulation(int populationSize) {
     int numberOfCities = graph->getVerticesNumber();
@@ -260,13 +178,6 @@ void GeneticAlgorithm::OXCrossover(const Individual &parent1, const Individual &
     child2.cost = graph->calculateTour(child2.path);
 }
 
-bool GeneticAlgorithm::valueInbetweenRange(const std::vector<int> tab, int startPos, int endPos, int valueToFind) {
-    for(int i = startPos; i < endPos; i++){
-        if (tab[i] == valueToFind) return true;
-    }
-    return false;
-}
-
 void GeneticAlgorithm::inversionMutation(Individual &individual) {
     // generowanie dwoch losowych punktow
     int iD1 = rand() % individual.path.size();
@@ -290,10 +201,8 @@ void GeneticAlgorithm::inversionMutation(Individual &individual) {
 
 GeneticAlgorithm::GeneticAlgorithm(TSPGraph *&graph) {
     this->graph = graph;
-
 }
 
-// ------------------------------------------gotowiec
 Individual GeneticAlgorithm::tournamentSelectionV2(std::vector<Individual> &population) {
 
     Individual individual1 = population[std::rand() % population.size()]; // losuje pierwszego osobnika
@@ -326,7 +235,10 @@ void GeneticAlgorithm::testOX() {
 }
 
 Individual GeneticAlgorithm::runV2(int stopTime, int populationSize, double mutationRate, double crossoverRate) {
+    bestSolutionFoundInTime.clear();
     srand ( time(NULL) );
+    int bestSolutionFound = INT_MAX;
+
 
     //czas start
     const std::clock_t start_time = std::clock();                                                                //rozpocznij odliczanie zegara
@@ -341,7 +253,14 @@ Individual GeneticAlgorithm::runV2(int stopTime, int populationSize, double muta
 
         // sortowanie wedlug przystosowania (rosnaco)
         std::sort(population.begin(), population.end(), compareIndividuals);
-        std::cout << population[0].cost << std::endl;
+
+        //std::cout << population[0].cost << std::endl;
+        if (population[0].cost < bestSolutionFound) {                           //jesli najnowsze rozwiązanie jest inne niz stare, to zapisujemy czas i jego wartosc do listy
+            double currentTime = (std::clock() - (double) start_time) / CLOCKS_PER_SEC;
+
+            bestSolutionFoundInTime.emplace_back(currentTime, population[0].cost);
+        }
+
         for(; iteratorInPopulation < 10; iteratorInPopulation++){                    //elitaryzm - zachowujemy 10 najlepszych wynikow z poprzedniej populacji
             newPopulation[iteratorInPopulation] = population[iteratorInPopulation];
         }
@@ -466,4 +385,8 @@ Individual GeneticAlgorithm::runTest(int stopTime, int populationSize, double mu
     file.close();
     std::sort(population.begin(), population.end(), compareIndividuals);
     return population[0];
+}
+
+const std::list<std::pair<double, int>> &GeneticAlgorithm::getBestSolutionFoundInTime() const {
+    return bestSolutionFoundInTime;
 }
