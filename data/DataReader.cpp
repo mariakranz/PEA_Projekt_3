@@ -3,7 +3,6 @@
 //
 
 #include <iostream>
-#include <fstream>
 #include <list>
 #include "DataReader.h"
 #include "../xmlParser/tinyxml2.h"
@@ -79,47 +78,4 @@ TSPGraph *DataReader::createGraphFromFile(const char* filePath) {
     }
 
     return nullptr;
-}
-
-int DataReader::savePathToFile(std::vector<int> &path, const char* filename) {
-    std::ofstream MyFile(filename);
-
-    if (!MyFile.is_open()) return -1;
-    MyFile << path.size() << "\n";
-    for(int i : path){
-        MyFile << i << "\n";
-        if(MyFile.fail()){
-            MyFile.close();
-            return -1;
-        }
-    }
-    MyFile << path[0] << "\n";
-    MyFile.close();
-    return 0;
-}
-
-int DataReader::calculatePathFromFile(const char *filename, TSPGraph*& graph) {
-    std::ifstream MyFile(filename);
-
-    if (!MyFile.is_open()) return -1;
-
-    int verticesNumber = 0;
-
-    MyFile >> verticesNumber;
-    if(MyFile.fail()){
-        MyFile.close();
-        return -1;
-    }
-
-    std::vector<int> path(verticesNumber);
-    for(int i = 0; i < verticesNumber; i++){
-        MyFile >> path[i];
-
-        if(MyFile.fail()){
-            MyFile.close();
-            return -1;
-        }
-    }
-
-    return graph->calculateTour(path);
 }

@@ -12,8 +12,6 @@
 class DataReader {
 public:
     static TSPGraph* createGraphFromFile(const char* filePath);                 //wczytuje dane z pliku xml do macierzy
-    static int savePathToFile(std::vector<int>& path, const char* filename);    //zapisuje sciezke do pliku
-    static int calculatePathFromFile(const char* filename, TSPGraph*& graph);   //odczytuje sciezke z pliku i liczy jej koszt
 };
 
 

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <vector>
+#include <algorithm>
 #include "data/DataReader.h"
 #include "representations/GraphRep.h"
 #include "graph/TSPGraph.h"
@@ -10,91 +10,13 @@ using namespace std;
 
 void menu();
 void testsDialog();
-void test();
-void test47();
-void test170();
-void test403();
-void temp();
-void temt2();
-void test1();
+void testInverseMutation();
+void testSwapMutation();
 
 int main() {
     cout << "Autorka: Maria Kranz, nr indeksu: 263985" << endl;
-    //test();
-    //test1();
     menu();
-    //temp();
- //   test47();
-    //test170();
-    //test403();
     return 0;
-}
-
-void temp(){
-    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv47.xml");
-
-    //TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv170.xml");
-
-    //TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\rbg403.xml");
-
-    //GraphRep::printAdjacencyMatrix(graph->getAdjMatrix(), graph->getVerticesNumber());
-    auto ga = new GeneticAlgorithm(graph);
-    auto result = ga->runV2(120, 5000, 0.01, 0.8);
-//    auto result = ga->runV2(240, 5000, 0.01, 0.8);
-//    auto result = ga->runV2(360, 5000, 0.01, 0.8);
-
-
-    cout << "Koszt: " << result.cost << endl;
-    cout << "Sciezka: ";
-
-    for (int i  = 0; i < result.path.size(); i++){
-        cout << result.path[i] << " ";
-    }
-
-    cout << endl;
-    //GeneticAlgorithm::runOlderVersion(30, 10, 0.8, 0.1, graph);
-}
-
-void test47(){
-    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv47.xml");
-    auto ga = new GeneticAlgorithm(graph);
-    auto result = ga->runV2(120, 5000, 0.01, 0.8);
-    cout << "Koszt: " << result.cost << endl;
-    cout << "Sciezka: ";
-
-    for (int i  = 0; i < result.path.size(); i++){
-        cout << result.path[i] << " ";
-    }
-
-    cout << endl;
-}
-
-void test170(){
-    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\ftv170.xml");
-    auto ga = new GeneticAlgorithm(graph);
-    auto result = ga->runV2(60, 5000, 0.01, 0.8);
-    cout << "Koszt: " << result.cost << endl;
-    cout << "Sciezka: ";
-
-    for (int i  = 0; i < result.path.size(); i++){
-        cout << result.path[i] << " ";
-    }
-
-    cout << endl;
-}
-
-void test403(){
-    TSPGraph *graph = DataReader::createGraphFromFile("..\\data_files\\rbg403.xml");
-    auto ga = new GeneticAlgorithm(graph);
-    auto result = ga->runV2(360, 5000, 0.01, 0.8);
-    cout << "Koszt: " << result.cost << endl;
-    cout << "Sciezka: ";
-
-    for (int i  = 0; i < result.path.size(); i++){
-        cout << result.path[i] << " ";
-    }
-
-    cout << endl;
 }
 
 
@@ -104,6 +26,9 @@ void menu(){
     TSPGraph* graph = nullptr;
     int time, populationSize = 0;
     double mutationRate, crossoverRate = 0.0;
+    int mutationType = 0;
+    string summary;
+
     int choice;
     Individual solution;
 
@@ -111,15 +36,12 @@ void menu(){
         cout << "\n----MENU----\n"
                 "1. Wczytanie danych z pliku (xml).\n"
                 "2. Wprowadzenie kryterium stopu.\n"
-                "3. Ustawienie wielkosci populacji poczatkowej.\n"
+                "3. Ustawienie wielkosci populacji.\n"
                 "4. Ustawienie wspolczynnika mutacji.\n"
                 "5. Ustawienia wspolczynnika krzyzowania.\n"
-                "6. Wybor metody krzyzowania (opcjonalnie).\n"
-                "7. Wybor metody metody mutacji (opcjonalnie).\n"
-                "8. Uruchomianie algorytmu dla wczytanych danych i ustawionych parametrow i wyswietlenie wynikow.\n"
-                "9. Zapis sciezki rozwiazania do pliku (txt).\n"
-                "10. Obliczenie wartosci sciezki z pliku (txt).\n"
-                "11. Testy.\n"
+                "6. Wybor metody metody mutacji.\n"
+                "7. Uruchomianie algorytmu dla wczytanych danych i ustawionych parametrow i wyswietlenie wynikow.\n"
+                "8. Testy.\n"
                 "0. Wyjdz z programu.\n"
                 "Wprowadz numer: ";
         cin >> choice;
@@ -156,34 +78,13 @@ void menu(){
                 cin >> crossoverRate;
                 break;
             case 6:
-                if(solution.cost){
-                    cout << "Podaj nazwe pliku: ";
-                    cin >> filePath;
-                    if(DataReader::savePathToFile(solution.path, filePath.c_str()) == -1){
-                        cout << "Blad przy zapisie do pliku." << endl;
-                    }else{
-                        cout << "Zapisano w pliku " << filePath << "." << endl;
-                    }
-                }else{
-                    cout << "Nie wygenerowano rozwiazania" << endl;
-                }
+                cout << "Wybierz metode mutacji: \n"
+                        "1. Inversion mutation.\n"
+                        "2. Swap mutation.\n"
+                        "Twoj wybor:";
+                cin >> mutationType;
                 break;
             case 7:
-                if(graph){
-                    cout << "Podaj nazwe pliku: ";
-                    cin >> filePath;
-                    int result = -1;
-                    result = DataReader::calculatePathFromFile(filePath.c_str(), graph);
-                    if(result == - 1){
-                        cout << "Blad przy odczytywaniu pliku." << endl;
-                    }else{
-                        cout << "Koszt: " << result << endl;
-                    }
-                }else{
-                    cout << "Nie zaladowano grafu." << endl;
-                }
-                break;
-            case 8:
                 if(graph == nullptr) {
                     cout << "Nie zaladowano grafu." << endl;
                     break;
@@ -201,13 +102,38 @@ void menu(){
                     break;
                 }
                 if(crossoverRate == 0){
-                    cout << "NIe ustawiono wspolczynnika krzyzowania" << endl;
+                    cout << "NIe ustawiono wspolczynnika krzyzowania." << endl;
+                    break;
+                }
+                if(mutationType == 0){
+                    cout << "Nie wybrano metody mutacji." << endl;
                     break;
                 }
 
                 delete ga;
                 ga = new GeneticAlgorithm(graph);
-                solution = ga->runV2(time, populationSize, mutationRate, crossoverRate);
+
+                Mutation type;
+                switch (mutationType) {
+                    case 1:
+                        type = inverseMut;
+                        break;
+                    case 2:
+                        type = swapMut;
+                        break;
+                }
+
+                summary = "Rozwiazanie problemu komiwojazera - Algorytm genetyczny. Parametry:\n";
+                summary += "Kryterium stopu: " + to_string(time) + "\n";
+                summary += "Rozmiar populacji: " + to_string(populationSize) + "\n";
+                summary += "Wspolczynnik mutacji: " + to_string(mutationRate) + "\n";
+                summary += "Wspolczynnik krzyzowania: " + to_string(crossoverRate) + "\n";
+                summary += "Metoda mutacji: " + GeneticAlgorithm::getMutationTypeToString(type) + "\n";
+                summary += "Generowanie rozwiazania...\n";
+
+                cout << summary;
+
+                solution = ga->run(time, populationSize, mutationRate, crossoverRate, type);
 
                 cout << "Koszt: " << solution.cost << endl;
                 cout << "Sciezka: ";
@@ -215,38 +141,9 @@ void menu(){
                 for (int i : solution.path){
                     cout << i << " ";
                 }
-
                 cout << endl;
                 break;
-            case 9:
-                if(solution.cost != 0){
-                    cout << "Podaj nazwe pliku: ";
-                    cin >> filePath;
-                    if(DataReader::savePathToFile(solution.path, filePath.c_str()) == -1){
-                        cout << "Blad przy zapisie do pliku." << endl;
-                    }else{
-                        cout << "Zapisano w pliku " << filePath << "." << endl;
-                    }
-                }else{
-                    cout << "Nie wygenerowano rozwiazania" << endl;
-                }
-                break;
-            case 10:
-                if(graph){
-                    cout << "Podaj nazwe pliku: ";
-                    cin >> filePath;
-                    int result = -1;
-                    result = DataReader::calculatePathFromFile(filePath.c_str(), graph);
-                    if(result == - 1){
-                        cout << "Blad przy odczytywaniu pliku." << endl;
-                    }else{
-                        cout << "Koszt: " << result << endl;
-                    }
-                }else{
-                    cout << "Nie zaladowano grafu." << endl;
-                }
-                break;
-            case 11:
+            case 8:
                 testsDialog();
                 break;
         }
@@ -257,8 +154,8 @@ void menu(){
 
 void testsDialog()
 {
-    cout << "Pliki: ftv47.xml, ftv170.xml, rbg403 musza znajdowac sie w tym samym folderze co plik wykonywany .exe\n"
-            "Przewidywany czas testu: 6h\n"
+    cout << "Pliki: ftv47.xml, ftv170.xml, rbg403 musza znajdowac sie w tym samym folderze co plik wykonywalny .exe\n"
+            "Przewidywany czas testu: 4h +\n"
             "Kontynuowac? 'T' - tak, 'N' - nie\n";
     char ans = 'N';
     cin >> ans;
@@ -269,18 +166,20 @@ void testsDialog()
         case 'N':
             break;
         case 'T':
-            test();
+            testInverseMutation();
+            testSwapMutation();
             break;
     }
 }
 
 
-void test()
+void testInverseMutation()
 {
     const int numberOfTestInstances = 10;
     const double mutationRate = 0.01;
     const double crossoverRate = 0.8;
     const int populationSize[3] = {500, 2000, 5000};
+    Mutation mutationType = inverseMut;
 
     string data47 = "ftv47.xml";
     const int time47 = 120;
@@ -288,19 +187,60 @@ void test()
     const int time170 = 240;
     string data403 = "rbg403.xml";
     const int time403 = 360;
-    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[0], 0.01, 0.8,data47.c_str());
-    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[1], 0.01, 0.8, data47.c_str());
-    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[2], 0.01, 0.8, data47.c_str());
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[0], 0.01, 0.8,
+                                                 data47.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[1], 0.01, 0.8,
+                                                 data47.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[2], 0.01, 0.8,
+                                                 data47.c_str(), mutationType);
 
-    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[0], mutationRate, crossoverRate, data170.c_str());
-    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[1], mutationRate, crossoverRate, data170.c_str());
-    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[2], mutationRate, crossoverRate, data170.c_str());
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[0], mutationRate,
+                                                  crossoverRate, data170.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[1], mutationRate,
+                                                  crossoverRate, data170.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[2], mutationRate,
+                                                  crossoverRate, data170.c_str(), mutationType);
 
-    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[0], mutationRate, crossoverRate, data403.c_str());
-    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[1], mutationRate, crossoverRate, data403.c_str());
-    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[2], mutationRate, crossoverRate, data403.c_str());
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[0], mutationRate,
+                                                  crossoverRate, data403.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[1], mutationRate,
+                                                  crossoverRate, data403.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[2], mutationRate,
+                                                  crossoverRate, data403.c_str(), mutationType);
 }
 
-void test1(){
-    Tests::generateFile_BestSolutionInTime_ftv47(10, 10, 500, 0.01, 0.8,"ftv170.xml");
+void testSwapMutation(){
+    const int numberOfTestInstances = 10;
+    const double mutationRate = 0.01;
+    const double crossoverRate = 0.8;
+    const int populationSize[3] = {500, 2000, 5000};
+    Mutation mutationType = swapMut;
+
+    string data47 = "ftv47.xml";
+    const int time47 = 120;
+    string data170 = "ftv170.xml";
+    const int time170 = 240;
+    string data403 = "rbg403.xml";
+    const int time403 = 360;
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[0], 0.01, 0.8,
+                                                 data47.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[1], 0.01, 0.8,
+                                                 data47.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv47(numberOfTestInstances, time47, populationSize[2], 0.01, 0.8,
+                                                 data47.c_str(), mutationType);
+
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[0], mutationRate,
+                                                  crossoverRate, data170.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[1], mutationRate,
+                                                  crossoverRate, data170.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_ftv170(numberOfTestInstances, time170, populationSize[2], mutationRate,
+                                                  crossoverRate, data170.c_str(), mutationType);
+
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[0], mutationRate,
+                                                  crossoverRate, data403.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[1], mutationRate,
+                                                  crossoverRate, data403.c_str(), mutationType);
+    Tests::generateFile_BestSolutionInTime_rbg403(numberOfTestInstances, time403, populationSize[2], mutationRate,
+                                                  crossoverRate, data403.c_str(), mutationType);
 }
+

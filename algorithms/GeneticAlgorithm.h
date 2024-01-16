@@ -16,6 +16,10 @@ struct Individual {
     //int cost = INT_MAX;
 };
 
+enum Mutation{
+    swapMut,
+    inverseMut
+};
 
 
 class GeneticAlgorithm {
@@ -25,30 +29,27 @@ class GeneticAlgorithm {
 private:
 
     std::vector<Individual> generateRandomPopulation(int populationSize);
-    // Funkcja selekcji turniejowej
-    Individual tournamentSelection(std::vector<Individual>& population,  std::vector<double>& probabilityOfSelection);
-    Individual tournamentSelectionV2(std::vector<Individual>& population);
-    static bool compareIndividuals(const Individual& a, const Individual& b);
-    std::vector<double> probabilityOfSelection(const std::vector<Individual>& population, const double& bestCandidateSelectionProbabilty);
 
-    void PMXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2);
-    void OXCrossover(const Individual& parent1, const Individual& parent2, Individual& child1, Individual& child2, int startPos, int endPos);
+    Individual tournamentSelection(std::vector<Individual>& population);
+    static bool compareIndividuals(const Individual& a, const Individual& b);
+
+    void OXCrossover(const Individual &parent1, const Individual &parent2, Individual &child1, Individual &child2,
+                     int startPos,
+                     int endPos);
 
     void inversionMutation(Individual& individual);
+    void swapMutation(Individual& individual);
 
 public:
 
-
     explicit GeneticAlgorithm(TSPGraph*& graph);
 
-
-    Individual runV2(int stopTime, int populationSize, double mutationRate, double crossoverRate);
-    void testOX();
+    Individual
+    run(int stopTime, int populationSize, double mutationRate, double crossoverRate, Mutation mutationType);
 
     const std::list<std::pair< double, int>> &getBestSolutionFoundInTime() const;
-    Individual runTest(int stopTime, int populationSize, double mutationRate, double crossoverRate, const char* filePath);
 
-    //Individual runOlderVersion(TSPGraph *&graph);
+    static std::string getMutationTypeToString(Mutation mutationType);
 
 };
 

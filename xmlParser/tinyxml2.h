@@ -425,7 +425,7 @@ public:
     }
 
 	// This number is perf sensitive. 4k seems like a good tradeoff on my machine.
-	// The test file is large, 170k.
+	// The testInverseMutation file is large, 170k.
 	// Release:		VS2010 gcc(no opt)
 	//		1k:		4000
 	//		2k:		4000
@@ -906,7 +906,7 @@ public:
 	XMLNode* DeepClone( XMLDocument* target ) const;
 
     /**
-    	Test if 2 nodes are the same, but don't test children.
+    	Test if 2 nodes are the same, but don't testInverseMutation children.
     	The 2 nodes do not need to be in the same Document.
 
     	Note: if called on a XMLDocument, this will return false.
